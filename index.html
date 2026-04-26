@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sam — VK4AHA · Amateur Radio Operator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #39ff6e;
+    --green-dim: #1a8c3c;
+    --green-faint: #0d3d1e;
+    --green-glow: rgba(57, 255, 110, 0.15);
+    --amber: #ffb830;
+    --amber-dim: #8c6010;
+    --red: #ff4444;
+    --bg: #070d0a;
+    --bg2: #0c150f;
+    --bg3: #111d14;
+    --border: rgba(57, 255, 110, 0.18);
+    --text: #b8d4be;
+    --text-dim: #5a7d61;
+  }
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+ 
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.07) 2px,
+      rgba(0,0,0,0.07) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+ 
+  /* noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+ 
+  /* --- NAV --- */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(7, 13, 10, 0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 52px;
+  }
+ 
+  .nav-call {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--green);
+    letter-spacing: 3px;
+  }
+ 
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+ 
+  .nav-links a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-decoration: none;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+ 
+  .nav-links a:hover { color: var(--green); }
+ 
+  .nav-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+ 
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+ 
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--green); }
+    50% { opacity: 0.4; box-shadow: none; }
+  }
+ 
+  /* --- HERO --- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem 2rem 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+  }
+ 
+  .hero-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--green-dim);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s ease both;
+  }
+ 
+  .hero-eyebrow span { color: var(--green); }
+ 
+  .hero-name {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(48px, 8vw, 96px);
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+    letter-spacing: -1px;
+    text-shadow: 0 0 40px rgba(57,255,110,0.3);
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+ 
+  .hero-callsign {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(18px, 3vw, 28px);
+    color: var(--amber);
+    letter-spacing: 6px;
+    margin-top: 0.5rem;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+ 
+  .hero-tagline {
+    font-size: 20px;
+    font-weight: 300;
+    color: var(--text-dim);
+    margin-top: 2rem;
+    max-width: 500px;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+ 
+  .hero-tagline strong { color: var(--text); font-weight: 500; }
+ 
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 2.5rem;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+ 
+  .badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 5px 12px;
+    border: 1px solid;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+ 
+  .badge-green { border-color: var(--green-dim); color: var(--green); background: var(--green-faint); }
+  .badge-amber { border-color: var(--amber-dim); color: var(--amber); background: rgba(255,184,48,0.07); }
+  .badge-dim { border-color: rgba(90,125,97,0.3); color: var(--text-dim); }
+ 
+  .hero-waveform {
+    position: absolute;
+    bottom: 3rem;
+    left: 0;
+    right: 0;
+    height: 60px;
+    opacity: 0.25;
+  }
+ 
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+ 
+  /* --- SECTIONS --- */
+  section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+    border-top: 1px solid var(--border);
+  }
+ 
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--green-dim);
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+ 
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+ 
+  h2 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 600;
+    font-size: 28px;
+    color: var(--green);
+    margin-bottom: 1.5rem;
+  }
+ 
+  p { color: var(--text); margin-bottom: 1rem; }
+ 
+  /* --- ABOUT GRID --- */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+ 
+  .about-text { grid-column: 1 / 2; }
+  .about-qsl { grid-column: 2 / 3; }
+ 
+  @media (max-width: 640px) {
+    .about-grid { grid-template-columns: 1fr; }
+    .about-text, .about-qsl { grid-column: 1; }
+    .nav-links { display: none; }
+  }
+ 
+  .qsl-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    position: relative;
+    overflow: hidden;
+  }
+ 
+  .qsl-card::before {
+    content: 'QSL CARD';
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+ 
+  .qsl-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(57,255,110,0.06);
+    color: var(--text-dim);
+  }
+ 
+  .qsl-row:last-child { border-bottom: none; }
+  .qsl-val { color: var(--green); font-weight: 400; }
+  .qsl-val.amber { color: var(--amber); }
+ 
+  /* --- RIGS --- */
+  .rigs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+ 
+  .rig-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.25rem;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+ 
+  .rig-card:hover {
+    border-color: rgba(57,255,110,0.45);
+    transform: translateY(-2px);
+  }
+ 
+  .rig-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+ 
+  .rig-card:hover::after { opacity: 1; }
+ 
+  .rig-icon {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+  }
+ 
+  .rig-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 0.5rem;
+  }
+ 
+  .rig-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin: 0;
+  }
+ 
+  .rig-status {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    margin-top: 0.75rem;
+  }
+ 
+  .rig-active { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-dim); }
+  .rig-lent { background: rgba(255,184,48,0.07); color: var(--amber); border: 1px solid var(--amber-dim); }
+  .rig-sketchy { background: rgba(255,68,68,0.07); color: var(--red); border: 1px solid rgba(255,68,68,0.3); }
+ 
+  /* --- MODES --- */
+  .modes-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+ 
+  .mode-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green-dim);
+    border-radius: 0 4px 4px 0;
+    padding: 1rem 1.25rem;
+  }
+ 
+  .mode-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--green);
+    margin-bottom: 0.35rem;
+  }
+ 
+  .mode-note { font-size: 13px; color: var(--text-dim); margin: 0; line-height: 1.4; }
+ 
+  /* --- HOBBIES --- */
+  .hobbies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+ 
+  .hobby-card {
+    padding: 1.25rem;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+  }
+ 
+  .hobby-icon {
+    font-size: 28px;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+ 
+  .hobby-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 1px;
+    margin-bottom: 0.3rem;
+  }
+ 
+  .hobby-note { font-size: 12px; color: var(--text-dim); margin: 0; }
+ 
+  /* --- SHACK --- */
+  .shack-block {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.75rem 2rem;
+    position: relative;
+  }
+ 
+  .terminal-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+  }
+ 
+  .terminal-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+ 
+  .terminal-block {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+ 
+  .terminal-line { display: block; }
+  .t-prompt { color: var(--green-dim); }
+  .t-cmd { color: var(--green); }
+  .t-out { color: var(--text); padding-left: 1.5rem; }
+  .t-comment { color: var(--text-dim); opacity: 0.6; }
+ 
+  /* --- MUSIC --- */
+  .music-block {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+ 
+  .music-text { flex: 1; min-width: 240px; }
+ 
+  .music-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 1rem;
+  }
+ 
+  .music-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 2px;
+  }
+ 
+  .music-tag.fav {
+    border-color: var(--amber-dim);
+    color: var(--amber);
+    background: rgba(255,184,48,0.06);
+  }
+ 
+  .birthday-banner {
+    background: var(--bg3);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+ 
+  /* --- FOOTER --- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+ 
+  footer span { color: var(--green-dim); }
+ 
+  /* SVG waveform animation */
+  @keyframes waveMove {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+ 
+  .wave-path {
+    animation: waveMove 8s linear infinite;
+  }
+</style>
+</head>
+<body>
+ 
+<!-- NAV -->
+<nav>
+  <div class="nav-call">VK4AHA</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#rigs">Rigs</a></li>
+    <li><a href="#modes">Modes</a></li>
+    <li><a href="#shack">Shack</a></li>
+    <li><a href="#hobbies">Hobbies</a></li>
+    <li><a href="#site">Site</a></li>
+  </ul>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    QRV · SUNSHINE COAST
+  </div>
+</nav>
+ 
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Amateur Radio Operator · <span>Foundation Licence · Mar 2025</span></div>
+  <div class="hero-name">SAM</div>
+  <div class="hero-callsign">VK4AHA · SUNSHINE COAST · QLD</div>
+  <p class="hero-tagline">Electronics tinkerer, <strong>RF enthusiast</strong>, SCARC member, and future Advanced ticket holder.</p>
+  <div class="hero-badges">
+    <span class="badge badge-green">Foundation Licensed</span>
+    <span class="badge badge-green">Advanced — In Progress</span>
+    <span class="badge badge-amber">FT8 Operator</span>
+    <span class="badge badge-amber">POTA Activator</span>
+    <span class="badge badge-dim">Air Cadets</span>
+    <span class="badge badge-dim">SWL Veteran</span>
+    <span class="badge badge-dim">SCARC Member</span>
+  </div>
+ 
+  <!-- Animated waveform -->
+  <svg class="hero-waveform" viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <g class="wave-path">
+      <polyline points="
+        0,30 20,30 25,10 30,50 35,10 40,50 45,30 60,30
+        80,30 85,15 90,45 95,15 100,45 105,30 110,30
+        130,30 133,25 136,20 139,10 142,20 145,30 148,40 151,50 154,40 157,30 160,30
+        180,30 185,22 190,30 195,38 200,30 205,22 210,30
+        230,30 235,5 240,55 245,5 250,55 255,30 260,30
+        280,30 285,30 310,30 315,18 320,42 325,18 330,42 335,30 340,30
+        360,30 365,28 370,25 375,22 380,25 385,28 390,30 395,28 400,25 405,30
+        420,30 425,10 430,50 435,10 440,50 445,30 460,30
+        480,30 490,30 500,30 505,20 510,40 515,20 520,40 525,30
+        540,30 550,30 555,15 560,45 565,15 570,45 575,30 580,30
+        600,30
+      " fill="none" stroke="#1a8c3c" stroke-width="1.5"/>
+      <!-- repeat for seamless loop -->
+      <polyline points="
+        600,30 620,30 625,10 630,50 635,10 640,50 645,30 660,30
+        680,30 685,15 690,45 695,15 700,45 705,30 710,30
+        730,30 733,25 736,20 739,10 742,20 745,30 748,40 751,50 754,40 757,30 760,30
+        780,30 785,22 790,30 795,38 800,30 805,22 810,30
+        830,30 835,5 840,55 845,5 850,55 855,30 860,30
+        880,30 885,30 910,30 915,18 920,42 925,18 930,42 935,30 940,30
+        960,30 965,28 970,25 975,22 980,25 985,28 990,30 995,28 1000,25 1005,30
+        1020,30 1025,10 1030,50 1035,10 1040,50 1045,30 1060,30
+        1080,30 1090,30 1100,30 1105,20 1110,40 1115,20 1120,40 1125,30
+        1140,30 1150,30 1155,15 1160,45 1165,15 1170,45 1175,30 1180,30
+        1200,30
+      " fill="none" stroke="#1a8c3c" stroke-width="1.5"/>
+    </g>
+  </svg>
+</div>
+ 
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-label">01 // About</div>
+  <div class="about-grid">
+    <div class="about-text">
+      <h2>Who I Am</h2>
+      <p>Born and raised on the Sunshine Coast, I've spent most of my life reverse-engineering electronics and figuring out how systems tick. That curiosity is what eventually pulled me into amateur radio — getting my Foundation licence in March 2025 was honestly one of the better decisions I've made.</p>
+      <p>Before getting on air I was deep in the SWL (shortwave listening) world via Broadcastify, soaking up everything I could. These days I'm working toward my Advanced ticket, regularly attending SCARC's Thursday night meetings, and visiting Wednesday sessions during the holidays.</p>
+      <p>I'm also in Air Cadets, which means regular radiocomms duties — though that's mostly CB channels, which is a bit of a vibe shift from running 75W into my Diamond CP6S vertical and making the neighbour's blender turn on.</p>
+    </div>
+    <div class="about-qsl">
+      <div class="qsl-card">
+        <div class="qsl-row"><span>Name</span><span class="qsl-val">Sam Phelan</span></div>
+        <div class="qsl-row"><span>Callsign</span><span class="qsl-val"><a href="https://www.qrz.com/db/vk4aha" target="_blank" style="color:var(--green);text-decoration:none;border-bottom:1px solid var(--green-dim);">VK4AHA ↗</a></span></div>
+        <div class="qsl-row"><span>QTH</span><span class="qsl-val">Sunshine Coast, QLD</span></div>
+        <div class="qsl-row"><span>Licence</span><span class="qsl-val">Foundation (Mar 2025)</span></div>
+        <div class="qsl-row"><span>Next Goal</span><span class="qsl-val amber">Advanced Ticket</span></div>
+        <div class="qsl-row"><span>Club</span><span class="qsl-val">SCARC</span></div>
+        <div class="qsl-row"><span>Meetings</span><span class="qsl-val">Thu (reg) · Wed (hols)</span></div>
+        <div class="qsl-row"><span>Antenna</span><span class="qsl-val">Diamond CP6S Vertical</span></div>
+        <div class="qsl-row"><span>Noise Floor</span><span class="qsl-val">Fairly Decent</span></div>
+        <div class="qsl-row"><span>Shack Location</span><span class="qsl-val amber">Guest Bedroom 😅</span></div>
+        <div class="qsl-row"><span>Dad's Call</span><span class="qsl-val"><a href="https://www.qrz.com/db/vk4pap" target="_blank" style="color:var(--green);text-decoration:none;border-bottom:1px solid var(--green-dim);">VK4PAP ↗</a></span></div>
+        <div class="qsl-row"><span>Cake Day</span><span class="qsl-val">7th March</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- RIGS -->
+<section id="rigs">
+  <div class="section-label">02 // Equipment</div>
+  <h2>Current Rigs</h2>
+  <div class="rigs-grid">
+    <div class="rig-card">
+      <div class="rig-icon">HF/VHF/UHF ALL-MODE</div>
+      <div class="rig-name">Yaesu FT-991A</div>
+      <p class="rig-desc">The main workhorse. All-mode all-band transceiver covering HF through 70cm. Built-in ATU, C4FM, and a colour display. FT8, SSB ragchews, and POTA activations live here.</p>
+      <span class="rig-status rig-active">● MAIN RIG</span>
+    </div>
+    <div class="rig-card">
+      <div class="rig-icon">DUAL BAND HT</div>
+      <div class="rig-name">Wouxun KG-UV9D</div>
+      <p class="rig-desc">Dual-band handheld covering a wide range. Solid little radio for VHF/UHF work and portable ops.</p>
+      <span class="rig-status rig-active">● OWNED</span>
+    </div>
+    <div class="rig-card">
+      <div class="rig-icon">DUAL BAND HT</div>
+      <div class="rig-name">Yaesu FT-2D</div>
+      <p class="rig-desc">A very capable C4FM/FM dual-band HT with APRS and colour display. Currently on loan — a genuinely nice handheld.</p>
+      <span class="rig-status rig-lent">⟳ ON LOAN</span>
+    </div>
+    <div class="rig-card">
+      <div class="rig-icon">VHF/UHF MOBILE</div>
+      <div class="rig-name">TYT (Unknown Model)</div>
+      <p class="rig-desc">This radio has seen things. It has lost all faith in humanity and the feeling may be mutual. Still in the shack though.</p>
+      <span class="rig-status rig-sketchy">⚠ QUESTIONABLE</span>
+    </div>
+    <div class="rig-card">
+      <div class="rig-icon">DMR PORTABLE</div>
+      <div class="rig-name">Motorola DP4800</div>
+      <p class="rig-desc">Professional-grade DMR portable. Tier II digital with analogue fallback — built like a tank. Crosses the line between amateur and professional radio nicely.</p>
+      <span class="rig-status rig-active">● IN SERVICE</span>
+    </div>
+  </div>
+</section>
+ 
+<!-- MODES -->
+<section id="modes">
+  <div class="section-label">03 // On Air</div>
+  <h2>Preferred Modes & Activities</h2>
+  <div class="modes-list">
+    <div class="mode-item">
+      <div class="mode-name">FT8</div>
+      <p class="mode-note">Primary digital mode. Weak signal DX on the FT-991A — watching the grid squares pile up.</p>
+    </div>
+    <div class="mode-item">
+      <div class="mode-name">SSB / Sideband</div>
+      <p class="mode-note">A good ragchew is hard to beat. Nothing like a proper HF conversation.</p>
+    </div>
+    <div class="mode-item">
+      <div class="mode-name">POTA</div>
+      <p class="mode-note">Parks on the Air activations. Love getting out portable and making contacts from the field.</p>
+    </div>
+    <div class="mode-item">
+      <div class="mode-name">Portable Ops</div>
+      <p class="mode-note">Occasional portable setups away from the guest bedroom shack. Fresh air included.</p>
+    </div>
+    <div class="mode-item">
+      <div class="mode-name">SWL</div>
+      <p class="mode-note">Where it all started — years of shortwave listening on Broadcastify before getting licensed.</p>
+    </div>
+    <div class="mode-item">
+      <div class="mode-name">Cadets Comms</div>
+      <p class="mode-note">Radiocomms duty in Air Cadets. Mostly CB channels — a long way from FT8 DX.</p>
+    </div>
+  </div>
+</section>
+ 
+<!-- SHACK -->
+<section id="shack">
+  <div class="section-label">04 // The Shack</div>
+  <h2>Station Notes</h2>
+  <div class="shack-block">
+    <div class="terminal-bar">
+      <div class="terminal-dot" style="background:#ff5f57"></div>
+      <div class="terminal-dot" style="background:#febc2e"></div>
+      <div class="terminal-dot" style="background:#28c840"></div>
+    </div>
+    <div class="terminal-block">
+      <span class="terminal-line"><span class="t-prompt">sam@shack:~$ </span><span class="t-cmd">cat station.info</span></span>
+      <span class="terminal-line t-out">Location   : Guest bedroom (yes, really)</span>
+      <span class="terminal-line t-out">Antenna    : Diamond CP6S vertical, 75W</span>
+      <span class="terminal-line t-out">Noise floor: Fairly decent for suburban QTH</span>
+      <span class="terminal-line t-out">Side effect: Neighbour's blender activates occasionally</span>
+      <br>
+      <span class="terminal-line"><span class="t-prompt">sam@shack:~$ </span><span class="t-cmd">cat interests.txt</span></span>
+      <span class="terminal-line t-out">- Electronics engineering & repair (lifelong)</span>
+      <span class="terminal-line t-out">- Reverse engineering systems / figuring out how stuff works</span>
+      <span class="terminal-line t-out">- FT8 DX hunting</span>
+      <span class="terminal-line t-out">- POTA activations</span>
+      <span class="terminal-line t-out">- SCARC club meetings (Thu regular / Wed holidays)</span>
+      <span class="terminal-line t-out">- Working toward Advanced licence</span>
+      <br>
+      <span class="terminal-line t-comment"># blender_incidents.log — 3 entries and counting</span>
+    </div>
+  </div>
+</section>
+ 
+<!-- HOBBIES -->
+<section id="hobbies">
+  <div class="section-label">05 // Beyond Radio</div>
+  <h2>Other Interests</h2>
+  <div class="hobbies-grid">
+    <div class="hobby-card">
+      <span class="hobby-icon">🎵</span>
+      <div class="hobby-name">Music</div>
+      <p class="hobby-note">Indie & hip hop primarily. Certified D1 Arcade Fire glazer. Also deep into the default male-manipulator playlist.</p>
+    </div>
+    <div class="hobby-card">
+      <span class="hobby-icon">🔧</span>
+      <div class="hobby-name">Electronics</div>
+      <p class="hobby-note">Repairing and understanding how systems work. The hobby that eventually led to a Foundation licence.</p>
+    </div>
+    <div class="hobby-card">
+      <span class="hobby-icon">💻</span>
+      <div class="hobby-name">Coding</div>
+      <p class="hobby-note">Occasional coder. Mostly feels like a chore, so ChatGPT usually gets the job done. Pragmatic approach.</p>
+    </div>
+    <div class="hobby-card">
+      <span class="hobby-icon">✈️</span>
+      <div class="hobby-name">Air Cadets</div>
+      <p class="hobby-note">Active member with radiocomms duties. Good experience even if it's mostly CB rather than HF.</p>
+    </div>
+  </div>
+ 
+  <!-- Music section -->
+  <div style="margin-top: 3rem;">
+    <div class="music-block">
+      <div class="music-text">
+        <h2 style="font-size: 22px;">Music Taste</h2>
+        <p>Indie and hip hop are the go-to genres. Strong Arcade Fire allegiance. Outside of that, the kind of music that gets described as "default male-manipulator" — you know the type.</p>
+        <div class="music-tags">
+          <span class="music-tag fav">Arcade Fire ★</span>
+          <span class="music-tag">Indie</span>
+          <span class="music-tag">Hip Hop</span>
+          <span class="music-tag">Male Manipulator Classics</span>
+        </div>
+      </div>
+      <div style="flex: 1; min-width: 220px;">
+        <div class="birthday-banner">
+          <span style="font-size: 20px;">🎂</span>
+          <div>
+            <div style="letter-spacing: 2px; margin-bottom: 2px;">CAKE DAY</div>
+            <div style="color: #ffcc66; font-size: 14px;">7th March</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<!-- SITE STRUCTURE -->
+<section id="site">
+  <div class="section-label">06 // Site Structure</div>
+  <h2>Planned Web Presence</h2>
+  <p style="margin-bottom: 2rem; color: var(--text-dim);">The plan is to split into two subdomains once a domain is locked in — a hobby/radio side and a clean professional side. Domain TBD.</p>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+ 
+    <div style="background: var(--bg2); border: 1px solid var(--border); border-top: 3px solid var(--green-dim); border-radius: 4px; padding: 1.5rem;">
+      <div style="font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-dim); letter-spacing:2px; margin-bottom:0.75rem;">HOBBY SUBDOMAIN</div>
+      <div style="font-family:'Orbitron',monospace; font-size:18px; color:var(--green); margin-bottom:0.5rem;">hobbies.samphelan.com</div>
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:1rem; line-height:1.5;">The fun side. Amateur radio, electronics, POTA, SCARC, FT8 logs, music — everything on this page, essentially.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <span class="badge badge-green" style="font-size:10px; padding:3px 8px;">Radio</span>
+        <span class="badge badge-green" style="font-size:10px; padding:3px 8px;">Electronics</span>
+        <span class="badge badge-green" style="font-size:10px; padding:3px 8px;">POTA</span>
+        <span class="badge badge-green" style="font-size:10px; padding:3px 8px;">Music</span>
+        <span class="badge badge-green" style="font-size:10px; padding:3px 8px;">SCARC</span>
+      </div>
+    </div>
+ 
+    <div style="background: var(--bg2); border: 1px solid var(--border); border-top: 3px solid var(--amber-dim); border-radius: 4px; padding: 1.5rem;">
+      <div style="font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text-dim); letter-spacing:2px; margin-bottom:0.75rem;">PROFESSIONAL ROOT</div>
+      <div style="font-family:'Orbitron',monospace; font-size:18px; color:var(--amber); margin-bottom:0.5rem;">samphelan.com</div>
+      <p style="font-size:13px; color:var(--text-dim); margin-bottom:1rem; line-height:1.5;">The professional face. Clean, minimal. Portfolio, skills, contact — the kind of page you'd actually send to someone.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:6px;">
+        <span class="badge badge-amber" style="font-size:10px; padding:3px 8px;">Portfolio</span>
+        <span class="badge badge-amber" style="font-size:10px; padding:3px 8px;">Professional</span>
+        <span class="badge badge-amber" style="font-size:10px; padding:3px 8px;">Contact</span>
+      </div>
+    </div>
+ 
+  </div>
+  <div style="margin-top:1.25rem; font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--text-dim); border:1px dashed rgba(57,255,110,0.15); border-radius:4px; padding:0.85rem 1rem;">
+    ⟳ &nbsp;Domain not yet registered — samphelan.com / samphelan.com.au both candidates. Structure is locked in though.
+  </div>
+</section>
+ 
+<!-- FOOTER -->
+<footer>
+  <div>73 DE <a href="https://www.qrz.com/db/vk4aha" target="_blank" style="color:var(--green);text-decoration:none;">VK4AHA</a> · SAM PHELAN · SUNSHINE COAST · QLD</div>
+  <div style="margin-top: 0.5rem; opacity: 0.5;">Foundation Licensed <span>Mar 2025</span> · SCARC Member · Advanced — Coming Soon · Dad: <a href="https://www.qrz.com/db/vk4pap" target="_blank" style="color:var(--green-dim);text-decoration:none;">VK4PAP</a></div>
+</footer>
+ 
+</body>
+</html>
+ 
